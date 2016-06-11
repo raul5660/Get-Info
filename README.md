@@ -13,5 +13,13 @@ Powershell script to find sensitive information in a system
 * msg
 
 # Example
-
 ``` Get-Info -Path C:\Test ```
+
+#TODO
+* MultiProcessing
+* Code Cleanup
+* Future Support
+	* accdb
+	* pst
+	* ost
+	* eml
