@@ -5,3 +5,13 @@ Powershell script to find sensitive information in a system
 * Social Security Numbers
 * Credit Card Numbers
 
+# Support
+* xlsx
+* txt
+* rtf
+* docx
+* msg
+
+# Example
+
+``` Get-Info -Path C:\Test ```
