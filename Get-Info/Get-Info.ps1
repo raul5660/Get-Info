@@ -77,6 +77,17 @@ foreach($file in $files)
 					Write-Host $filePath
 				}
 			}
+			"msg"
+			{
+				$outlook = New-Object -ComObject Outlook.Application
+				$msg = $outlook.CreateItemFromTemplate($filePath)
+				$data = -join ($msg.Body,$msg.Subject)
+				$RegularExpressionMatches = (Select-String -InputObject $data -Pattern $RegularExpression -AllMatches)
+				if ($RegularExpressionMatches.Count -gt 0)
+				{
+					Write-Host $filePath
+				}
+			}
 		}
 	}
 }
