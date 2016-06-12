@@ -1,7 +1,7 @@
 ﻿## TODO ##
 Param([String]$Path)
 
-$RegularExpression = "\d{3}-\d{2}-\d{4}|(?:\d[ -]*?){13,16}"
+$RegularExpression = "\d{3}-\d{2}-\d{4}|\d{4}-\d{4}-\d{4}-\d{4}"
 $files = (Get-ChildItem -Force $Path -Recurse | Select-Object Directory, Name)
 
 foreach($file in $files)
@@ -86,6 +86,30 @@ foreach($file in $files)
 				if ($RegularExpressionMatches.Count -gt 0)
 				{
 					Write-Host $filePath
+				}
+			}
+			"pst"
+			{
+				$oProc = ( Get-Process | where { $_.Name -eq "OUTLOOK" } )
+				if ( $oProc -eq $null ) 
+				{ 
+					Start-Process outlook -WindowStyle Hidden
+					Start-Sleep -Seconds 5 
+				}
+				$outlook = New-Object -ComObject Outlook.Application
+				$namespace = $outlook.GetNamespace("MAPI")
+				$namespace.AddStoreEx($filePath, 1)
+				$pstStore = ( $nameSpace.Stores | where { $_.FilePath -eq $filePath } )
+				$pstRootFolder = $pstStore.GetRootFolder()
+				$inboxFolder = $pstRootFolder.Folders|? { $_.Name -eq 'Inbox' }
+				foreach($email in $inboxFolder.Items)
+				{
+					$data = -join ($email.Body,$email.Subject)
+					$RegularExpressionMatches = (Select-String -InputObject $data -Pattern $RegularExpression -AllMatches)
+					if ($RegularExpressionMatches.Count -gt 0)
+					{
+						Write-Host $filePath,":",$email.SenderEmailAddress,":",$email.Subject,":",$email.ReceivedTime
+					}
 				}
 			}
 		}

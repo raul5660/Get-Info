@@ -11,6 +11,7 @@ Powershell script to find sensitive information in a system
 * rtf
 * docx
 * msg
+* pst
 
 # Example
 ``` Get-Info -Path C:\Test ```
@@ -20,6 +21,5 @@ Powershell script to find sensitive information in a system
 * Code Cleanup
 * Future Support
 	* accdb
-	* pst
 	* ost
 	* eml
