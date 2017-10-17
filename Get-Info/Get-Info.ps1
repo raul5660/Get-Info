@@ -94,6 +94,12 @@ function PSTFile
 	}
 }
 
+function PDF
+{
+	Param([String]$CompleteFilePath)
+
+}
+
 Param([String]$Path)
 
 $RegularExpression = "\d{3}-\d{2}-\d{4}|\d{4}-\d{4}-\d{4}-\d{4}"
