@@ -1,149 +1,177 @@
 ﻿## TODO ##
 
-function TextDocuments
+function Get-Info
 {
-	Param([String]$CompleteFilePath)
-	$RegularExpressionMatches = (Select-String -Path $CompleteFilePath -Pattern $RegularExpression -AllMatches)
-	if ($RegularExpressionMatches.Count -gt 0)
-	{
-		Write-Host $filePath
-	}
-}
+	Param([String]$Path)
 
-function SpreadSheets
-{
-	Param([String]$CompleteFilePath)
-	$excel = New-Object -ComObject Excel.Application
-	$excel.Visible = $false
-	$workbook = $excel.WorkBooks.Open($CompleteFilePath, $false, $true)
-	$done = $false
-	foreach($spreadsheet in $workbook.Sheets)
+	#$RegularExpression = "\d{3}-\d{2}-\d{4}|\d{4}-\d{4}-\d{4}-\d{4}"
+	$files = (Get-ChildItem -Force $Path -Recurse | Select-Object Directory, Name)
+
+	function TextDocuments
 	{
-		$columnCount = 5000
-		$rowCount = 5000
-		if($done){break}
-		for($x = 1; $x -lt $rowCount; $x++)
+		Param([String]$CompleteFilePath)
+		$RegularExpressionMatches = (Select-String -Path $CompleteFilePath -Pattern $RegularExpression -AllMatches)
+		if ($RegularExpressionMatches.Count -gt 0)
 		{
+			Write-Host $filePath
+		}
+	}
+
+	function SpreadSheets
+	{
+		Param([String]$CompleteFilePath)
+		$excel = New-Object -ComObject Excel.Application
+		$excel.Visible = $false
+		$workbook = $excel.WorkBooks.Open($CompleteFilePath, $false, $true)
+		$done = $false
+		foreach($spreadsheet in $workbook.Sheets)
+		{
+			$columnCount = 5000
+			$rowCount = 5000
 			if($done){break}
-			for($y = 1; $y -lt $columnCount; $y++)
+			for($x = 1; $x -lt $rowCount; $x++)
 			{
-				$data = $spreadsheet.Cells.Item($y,$x).Text
-				$RegularExpressionMatches = (Select-String -InputObject $data -Pattern $RegularExpression -AllMatches)
-				if ($RegularExpressionMatches.Count -gt 0)
+				if($done){break}
+				for($y = 1; $y -lt $columnCount; $y++)
 				{
-					Write-Host $filePath
-					$done = $true
-					break
+					$data = $spreadsheet.Cells.Item($y,$x).Text
+					$RegularExpressionMatches = (Select-String -InputObject $data -Pattern $RegularExpression -AllMatches)
+					if ($RegularExpressionMatches.Count -gt 0)
+					{
+						Write-Host $filePath
+						$done = $true
+						break
+					}
 				}
 			}
 		}
+		$done = $false
 	}
-	$done = $false
-}
 
-function WordDouments
-{
-	Param([String]$CompleteFilePath)
-	$word = New-Object -ComObject Word.Application
-	$word.Visible = $false
-	$doc = $word.Documents.Open($CompleteFilePath, $false, $true)
-	$data = $doc.WordOpenXML.toString()
-	$RegularExpressionMatches = (Select-String -InputObject $data -Pattern $RegularExpression -AllMatches)
-	if ($RegularExpressionMatches.Count -gt 0)
+	function WordDouments
 	{
-		Write-Host $filePath
-	}
-}
-
-function MessageFile
-{
-	Param([String]$CompleteFilePath)
-	$outlook = New-Object -ComObject Outlook.Application
-	$msg = $outlook.CreateItemFromTemplate($CompleteFilePath)
-	$data = -join ($msg.Body,$msg.Subject)
-	$RegularExpressionMatches = (Select-String -InputObject $data -Pattern $RegularExpression -AllMatches)
-	if ($RegularExpressionMatches.Count -gt 0)
-	{
-		Write-Host $filePath
-	}
-}
-
-function PSTFile
-{
-	Param([String]$CompleteFilePath)
-	$oProc = ( Get-Process | where { $_.Name -eq "OUTLOOK" } )
-	if ( $oProc -eq $null ) 
-	{ 
-		Start-Process outlook -WindowStyle Hidden
-		Start-Sleep -Seconds 5 
-	}
-	$outlook = New-Object -ComObject Outlook.Application
-	$namespace = $outlook.GetNamespace("MAPI")
-	$namespace.AddStoreEx($CompleteFilePath, 1)
-	$pstStore = ( $nameSpace.Stores | where { $_.FilePath -eq $CompleteFilePath } )
-	$pstRootFolder = $pstStore.GetRootFolder()
-	$inboxFolder = $pstRootFolder.Folders|? { $_.Name -eq 'Inbox' }
-	foreach($email in $inboxFolder.Items)
-	{
-		$data = -join ($email.Body,$email.Subject)
+		Param([String]$CompleteFilePath)
+		$word = New-Object -ComObject Word.Application
+		$word.Visible = $false
+		$doc = $word.Documents.Open($CompleteFilePath, $false, $true)
+		$data = $doc.WordOpenXML.toString()
 		$RegularExpressionMatches = (Select-String -InputObject $data -Pattern $RegularExpression -AllMatches)
 		if ($RegularExpressionMatches.Count -gt 0)
 		{
-			Write-Host $filePath,":",$email.SenderEmailAddress,":",$email.Subject,":",$email.ReceivedTime
+			Write-Host $filePath
 		}
 	}
-}
 
-function PDF
-{
-	Param([String]$CompleteFilePath)
-
-}
-
-Param([String]$Path)
-
-$RegularExpression = "\d{3}-\d{2}-\d{4}|\d{4}-\d{4}-\d{4}-\d{4}"
-$files = (Get-ChildItem -Force $Path -Recurse | Select-Object Directory, Name)
-
-foreach($file in $files)
-{
-	if ($file.Directory -ne $null)
+	function MessageFile
 	{
-		$filePath =  (-join ($file.Directory, "\", $file.Name))
-		$fileType = $file.Name.Split('.')[-1]
-		if($filePath.Contains('~'))
+		Param([String]$CompleteFilePath)
+		$outlook = New-Object -ComObject Outlook.Application
+		$msg = $outlook.CreateItemFromTemplate($CompleteFilePath)
+		$data = -join ($msg.Body,$msg.Subject)
+		$RegularExpressionMatches = (Select-String -InputObject $data -Pattern $RegularExpression -AllMatches)
+		if ($RegularExpressionMatches.Count -gt 0)
 		{
-			continue
+			Write-Host $filePath
 		}
-		switch($fileType)
+	}
+
+	function PSTFile
+	{
+		Param([String]$CompleteFilePath)
+		$oProc = ( Get-Process | where { $_.Name -eq "OUTLOOK" } )
+		if ( $oProc -eq $null ) 
+		{ 
+			Start-Process outlook -WindowStyle Hidden
+			Start-Sleep -Seconds 5 
+		}
+		$outlook = New-Object -ComObject Outlook.Application
+		$namespace = $outlook.GetNamespace("MAPI")
+		$namespace.AddStoreEx($CompleteFilePath, 1)
+		$pstStore = ( $nameSpace.Stores | where { $_.FilePath -eq $CompleteFilePath } )
+		$pstRootFolder = $pstStore.GetRootFolder()
+		$inboxFolder = $pstRootFolder.Folders|? { $_.Name -eq 'Inbox' }
+		foreach($email in $inboxFolder.Items)
 		{
-			"txt"
+			$data = -join ($email.Body,$email.Subject)
+			$RegularExpressionMatches = (Select-String -InputObject $data -Pattern $RegularExpression -AllMatches)
+			if ($RegularExpressionMatches.Count -gt 0)
 			{
-				TextDocument -CompleteFilePath $filePath
+				Write-Host $filePath,":",$email.SenderEmailAddress,":",$email.Subject,":",$email.ReceivedTime
 			}
-			"rtf"
+		}
+	}
+
+	function PDF
+	{
+		Param([String]$CompleteFilePath)
+		Add-Type -Path .\itextsharp-dll-core\itextsharp.dll
+
+		$CompleteFilePath;
+
+		$reader = New-Object iTextSharp.text.pdf.pdfreader -ArgumentList $CompleteFilePath
+
+		for ($page = 1; $page -le $reader.NumberOfPages; $page++)
+		{
+			$text = [iTextSharp.text.pdf.parser.PdfTextExtractor]::GetTextFromPage($reader,$page).Split([char]0x000A)
+
+			foreach ($line in $text)
 			{
-				TextDocument -CompleteFilePath $filePath
+				$RegularExpressionMatches = (Select-String -InputObject $line -Pattern $RegularExpression -AllMatches)
+				if ($RegularExpressionMatches.Count -gt 0)
+				{
+						Write-Host $filePath,": Page ",$page,"; Matches: ",$RegularExpressionMatches
+				}
 			}
-			"xlsx"
+		}
+
+		$reader.Close()
+	}
+
+	foreach($file in $files)
+	{
+		if ($file.Directory -ne $null)
+		{
+			$filePath =  (-join ($file.Directory, "\", $file.Name))
+			$fileType = ($file.Name.Split('.')[-1]).toLower()
+			if($filePath.Contains('~'))
 			{
-				SpreadSheets -CompleteFilePath $filePath
+				continue
 			}
-			"accdb"
+			switch($fileType)
 			{
-				Write-Host "Access Database File"
-			}
-			"docx"
-			{
-				WordDocument -CompleteFilePath $filePath
-			}
-			"msg"
-			{
-				MessageFile -CompleteFilePath $filePath
-			}
-			"pst"
-			{
-				PSTFile -CompleteFilePath $filePath	
+				"txt"
+				{
+					TextDocument -CompleteFilePath $filePath
+				}
+				"rtf"
+				{
+					TextDocument -CompleteFilePath $filePath
+				}
+				"xlsx"
+				{
+					SpreadSheets -CompleteFilePath $filePath
+				}
+				"accdb"
+				{
+					Write-Host "Access Database File"
+				}
+				"docx"
+				{
+					WordDocument -CompleteFilePath $filePath
+				}
+				"msg"
+				{
+					MessageFile -CompleteFilePath $filePath
+				}
+				"pst"
+				{
+					PSTFile -CompleteFilePath $filePath	
+				}
+				"pdf"
+				{
+					Write-Host "PDF File"
+					PDF -CompleteFilePath $filePath
+				}
 			}
 		}
 	}
